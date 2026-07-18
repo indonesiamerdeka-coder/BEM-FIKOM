@@ -1,0 +1,6 @@
+{
+  "name": "BEM Fakultas Ilmu Komputer Portal",
+  "description": "Situs resmi Badan Eksekutif Mahasiswa (BEM) Fakultas Ilmu Komputer - Pusat informasi, transparansi program kerja, aspirasi mahasiswa, dan repositori dokumen resmi.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
