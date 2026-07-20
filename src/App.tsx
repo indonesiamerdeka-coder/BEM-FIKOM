@@ -22,9 +22,11 @@ import {
   initialEvents, 
   initialPrograms, 
   initialDocuments, 
-  initialAspirations 
+  initialAspirations,
+  initialCabinetMembers,
+  initialMinistries
 } from './data';
-import { News, BEMEvent, Program, Document, Aspiration } from './types';
+import { News, BEMEvent, Program, Document, Aspiration, CabinetMember, Ministry } from './types';
 
 export default function App() {
   // Page Tab state
@@ -48,6 +50,14 @@ export default function App() {
   const [aspirations, setAspirations] = useState<Aspiration[]>(() => {
     const saved = localStorage.getItem('bem_aspirations');
     return saved ? JSON.parse(saved) : initialAspirations;
+  });
+  const [cabinetMembers, setCabinetMembers] = useState<CabinetMember[]>(() => {
+    const saved = localStorage.getItem('bem_cabinet_members');
+    return saved ? JSON.parse(saved) : initialCabinetMembers;
+  });
+  const [ministries, setMinistries] = useState<Ministry[]>(() => {
+    const saved = localStorage.getItem('bem_ministries');
+    return saved ? JSON.parse(saved) : initialMinistries;
   });
 
   // New ticket alerts
@@ -78,6 +88,14 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem('bem_aspirations', JSON.stringify(aspirations));
   }, [aspirations]);
+
+  useEffect(() => {
+    localStorage.setItem('bem_cabinet_members', JSON.stringify(cabinetMembers));
+  }, [cabinetMembers]);
+
+  useEffect(() => {
+    localStorage.setItem('bem_ministries', JSON.stringify(ministries));
+  }, [ministries]);
 
   useEffect(() => {
     localStorage.setItem('bem_is_admin', String(isAdmin));
@@ -215,6 +233,52 @@ export default function App() {
     triggerToast(`🗑️ Dokumen berhasil dihapus.`);
   };
 
+  // CRUD for Cabinet Members
+  const handleAddCabinetMember = (newMb: Omit<CabinetMember, 'id'>) => {
+    const newMember: CabinetMember = {
+      ...newMb,
+      id: `mb-${Date.now()}`
+    };
+    setCabinetMembers(prev => [...prev, newMember]);
+    triggerToast(`👤 Pengurus Inti "${newMember.name}" berhasil ditambahkan!`);
+  };
+
+  const handleUpdateCabinetMember = (updatedMb: CabinetMember) => {
+    setCabinetMembers(prev => prev.map(m => m.id === updatedMb.id ? updatedMb : m));
+    triggerToast(`👤 Pengurus Inti "${updatedMb.name}" berhasil diperbarui!`);
+  };
+
+  const handleDeleteCabinetMember = (id: string) => {
+    const member = cabinetMembers.find(m => m.id === id);
+    setCabinetMembers(prev => prev.filter(m => m.id !== id));
+    if (member) {
+      triggerToast(`👤 Pengurus Inti "${member.name}" berhasil dihapus!`);
+    }
+  };
+
+  // CRUD for Ministries
+  const handleAddMinistry = (newMin: Omit<Ministry, 'id'>) => {
+    const newMinistry: Ministry = {
+      ...newMin,
+      id: `min-${Date.now()}`
+    };
+    setMinistries(prev => [...prev, newMinistry]);
+    triggerToast(`🏛️ Kementerian "${newMinistry.name}" berhasil ditambahkan!`);
+  };
+
+  const handleUpdateMinistry = (updatedMin: Ministry) => {
+    setMinistries(prev => prev.map(m => m.id === updatedMin.id ? updatedMin : m));
+    triggerToast(`🏛️ Kementerian "${updatedMin.name}" berhasil diperbarui!`);
+  };
+
+  const handleDeleteMinistry = (id: string) => {
+    const min = ministries.find(m => m.id === id);
+    setMinistries(prev => prev.filter(m => m.id !== id));
+    if (min) {
+      triggerToast(`🏛️ Kementerian "${min.name}" berhasil dihapus!`);
+    }
+  };
+
   // Helper count totals
   const totalAspirations = aspirations.length;
   const solvedAspirationsCount = aspirations.filter(a => a.status === 'Selesai').length;
@@ -273,7 +337,10 @@ export default function App() {
             )}
 
             {currentTab === 'profil' && (
-              <ProfilView />
+              <ProfilView 
+                cabinetMembers={cabinetMembers}
+                ministries={ministries}
+              />
             )}
 
             {currentTab === 'proker' && (
@@ -307,6 +374,8 @@ export default function App() {
                   programs={programs}
                   newsList={newsList}
                   documents={documents}
+                  cabinetMembers={cabinetMembers}
+                  ministries={ministries}
                   onUpdateAspiration={handleUpdateAspiration}
                   onDeleteAspiration={handleDeleteAspiration}
                   onAddProgram={handleAddProgram}
@@ -318,6 +387,12 @@ export default function App() {
                   onAddDocument={handleAddDocument}
                   onUpdateDocument={handleUpdateDocument}
                   onDeleteDocument={handleDeleteDocument}
+                  onAddCabinetMember={handleAddCabinetMember}
+                  onUpdateCabinetMember={handleUpdateCabinetMember}
+                  onDeleteCabinetMember={handleDeleteCabinetMember}
+                  onAddMinistry={handleAddMinistry}
+                  onUpdateMinistry={handleUpdateMinistry}
+                  onDeleteMinistry={handleDeleteMinistry}
                   onLogout={() => {
                     setIsAdmin(false);
                     triggerToast("🔒 Berhasil log out dari panel admin.");

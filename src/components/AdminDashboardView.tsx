@@ -24,13 +24,15 @@ import {
   FileCheck2,
   ListFilter
 } from 'lucide-react';
-import { Aspiration, Program, News, Document } from '../types';
+import { Aspiration, Program, News, Document, CabinetMember, Ministry } from '../types';
 
 interface AdminDashboardViewProps {
   aspirations: Aspiration[];
   programs: Program[];
   newsList: News[];
   documents: Document[];
+  cabinetMembers: CabinetMember[];
+  ministries: Ministry[];
   onUpdateAspiration: (updated: Aspiration) => void;
   onDeleteAspiration: (id: string) => void;
   onAddProgram: (program: Omit<Program, 'id' | 'dateUpdated'>) => void;
@@ -42,6 +44,12 @@ interface AdminDashboardViewProps {
   onAddDocument: (doc: Omit<Document, 'id' | 'downloadsCount'>) => void;
   onUpdateDocument: (doc: Document) => void;
   onDeleteDocument: (id: string) => void;
+  onAddCabinetMember: (member: Omit<CabinetMember, 'id'>) => void;
+  onUpdateCabinetMember: (member: CabinetMember) => void;
+  onDeleteCabinetMember: (id: string) => void;
+  onAddMinistry: (min: Omit<Ministry, 'id'>) => void;
+  onUpdateMinistry: (min: Ministry) => void;
+  onDeleteMinistry: (id: string) => void;
   onLogout: () => void;
 }
 
@@ -50,6 +58,8 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
   programs,
   newsList,
   documents,
+  cabinetMembers,
+  ministries,
   onUpdateAspiration,
   onDeleteAspiration,
   onAddProgram,
@@ -61,6 +71,12 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
   onAddDocument,
   onUpdateDocument,
   onDeleteDocument,
+  onAddCabinetMember,
+  onUpdateCabinetMember,
+  onDeleteCabinetMember,
+  onAddMinistry,
+  onUpdateMinistry,
+  onDeleteMinistry,
   onLogout
 }) => {
   // Roles toggle simulation
@@ -137,6 +153,25 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
   const [docStatus, setDocStatus] = useState<Document['status']>('Publik');
   const [docSize, setDocSize] = useState('1.5 MB');
   const [docSuccessMsg, setDocSuccessMsg] = useState(false);
+
+  // ----------------------------------------------------
+  // CABINET MEMBERS & MINISTRIES CRUD STATES
+  // ----------------------------------------------------
+  const [editingMember, setEditingMember] = useState<CabinetMember | null>(null);
+  const [memberName, setMemberName] = useState('');
+  const [memberRole, setMemberRole] = useState('');
+  const [memberDept, setMemberDept] = useState('Inti');
+  const [memberPhoto, setMemberPhoto] = useState('');
+  const [memberMajor, setMemberMajor] = useState('Teknik Informatika');
+  const [memberYear, setMemberYear] = useState('2023');
+
+  const [editingMin, setEditingMin] = useState<Ministry | null>(null);
+  const [minName, setMinName] = useState('');
+  const [minDesc, setMinDesc] = useState('');
+  const [minLeader, setMinLeader] = useState('');
+  const [minSekjen, setMinSekjen] = useState('');
+  const [minStaff, setMinStaff] = useState('');
+  const [profileSuccessMsg, setProfileSuccessMsg] = useState(false);
 
   // Totals for Dashboard stats
   const totalAspirations = aspirations.length;
@@ -399,6 +434,118 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
   };
 
   // ----------------------------------------------------
+  // HANDLERS: CABINET PROFILE
+  // ----------------------------------------------------
+  const handleSelectEditMember = (mb: CabinetMember) => {
+    setEditingMember(mb);
+    setMemberName(mb.name);
+    setMemberRole(mb.role);
+    setMemberDept(mb.department);
+    setMemberPhoto(mb.photo);
+    setMemberMajor(mb.major);
+    setMemberYear(mb.year);
+    // cancel any ministry edit to avoid confusion
+    handleCancelMinForm();
+  };
+
+  const handleCancelMemberForm = () => {
+    setEditingMember(null);
+    setMemberName('');
+    setMemberRole('');
+    setMemberDept('Inti');
+    setMemberPhoto('');
+    setMemberMajor('Teknik Informatika');
+    setMemberYear('2023');
+  };
+
+  const handleSaveMemberForm = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!memberName.trim() || !memberRole.trim()) return;
+
+    const memberData = {
+      name: memberName,
+      role: memberRole,
+      department: memberDept,
+      photo: memberPhoto.trim() || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=300',
+      major: memberMajor,
+      year: memberYear
+    };
+
+    if (editingMember) {
+      onUpdateCabinetMember({ ...editingMember, ...memberData });
+    } else {
+      onAddCabinetMember(memberData);
+    }
+
+    handleCancelMemberForm();
+    setProfileSuccessMsg(true);
+    setTimeout(() => setProfileSuccessMsg(false), 3000);
+  };
+
+  const handleDeleteMemberAction = (id: string) => {
+    onDeleteCabinetMember(id);
+    if (editingMember?.id === id) {
+      handleCancelMemberForm();
+    }
+    setDeleteConfirmId(null);
+  };
+
+  const handleSelectEditMin = (min: Ministry) => {
+    setEditingMin(min);
+    setMinName(min.name);
+    setMinDesc(min.description);
+    setMinLeader(min.leader);
+    setMinSekjen(min.sekjen);
+    setMinStaff(min.staff ? min.staff.join(', ') : '');
+    // cancel any member edit to avoid confusion
+    handleCancelMemberForm();
+  };
+
+  const handleCancelMinForm = () => {
+    setEditingMin(null);
+    setMinName('');
+    setMinDesc('');
+    setMinLeader('');
+    setMinSekjen('');
+    setMinStaff('');
+  };
+
+  const handleSaveMinForm = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!minName.trim() || !minDesc.trim()) return;
+
+    const staffArray = minStaff
+      ? minStaff.split(',').map(s => s.trim()).filter(Boolean)
+      : [];
+
+    const minData = {
+      name: minName,
+      description: minDesc,
+      leader: minLeader,
+      sekjen: minSekjen,
+      staff: staffArray
+    };
+
+    if (editingMin) {
+      onUpdateMinistry({ ...editingMin, ...minData });
+    } else {
+      onAddMinistry(minData);
+    }
+
+    handleCancelMinForm();
+    setProfileSuccessMsg(true);
+    setTimeout(() => setProfileSuccessMsg(false), 3000);
+  };
+
+  const handleDeleteMinAction = (id: string) => {
+    onDeleteMinistry(id);
+    if (editingMin?.id === id) {
+      handleCancelMinForm();
+    }
+    setDeleteConfirmId(null);
+  };
+
+  // ----------------------------------------------------
   // DATA FILTERING CALCULATIONS
   // ----------------------------------------------------
   const filteredAspirations = aspirations.filter(asp => {
@@ -606,6 +753,17 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
               }`}
             >
               📄 Berkas Transparansi & Unduhan ({documents.length})
+            </button>
+            <button
+              id="admin-tab-profil"
+              onClick={() => { setActiveSubTab('profil'); handleCancelMemberForm(); handleCancelMinForm(); }}
+              className={`pb-3 text-sm font-extrabold transition-all border-b-2 cursor-pointer ${
+                activeSubTab === 'profil'
+                  ? 'border-emerald-600 text-emerald-600 font-black'
+                  : 'border-transparent text-gray-500 hover:text-gray-900'
+              }`}
+            >
+              👥 Profil Kabinet & Struktur ({cabinetMembers.length + ministries.length})
             </button>
           </>
         )}
@@ -1682,6 +1840,362 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
                     <span>{editingDoc ? 'Simpan Berkas' : 'Daftarkan Unduhan'}</span>
                   </button>
                 </form>
+              </div>
+            </motion.div>
+          )}
+
+          {/* ==================================================== */}
+          {/* TAB: CABINET PROFILE CRUD */}
+          {/* ==================================================== */}
+          {activeSubTab === 'profil' && adminRole === 'KONTEN' && (
+            <motion.div
+              key="subtab-profil"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="grid grid-cols-1 xl:grid-cols-3 gap-8 text-left"
+            >
+              {/* Left & Middle Side: List of Members & Ministries */}
+              <div className="xl:col-span-2 space-y-8">
+                
+                {/* 1. Pengurus Harian Inti section */}
+                <div className="bg-white border border-gray-100 rounded-3xl p-6 shadow-xs space-y-4">
+                  <div className="border-b border-gray-100 pb-3 flex justify-between items-center">
+                    <div>
+                      <h3 className="font-display font-extrabold text-lg text-gray-900">
+                        Badan Pengurus Harian Inti
+                      </h3>
+                      <p className="text-xs text-gray-500">Membentuk kerangka kepemimpinan utama kabinet.</p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {cabinetMembers.map((member) => {
+                      const isConfirming = deleteConfirmId === member.id;
+                      return (
+                        <div key={member.id} className="flex bg-slate-50 border border-slate-100 rounded-2xl p-4 gap-4 items-center group relative hover:shadow-xs transition-all">
+                          <img 
+                            src={member.photo} 
+                            alt={member.name} 
+                            className="w-14 h-14 rounded-full object-cover border border-gray-200 shrink-0"
+                            referrerPolicy="no-referrer"
+                          />
+                          <div className="flex-1 min-w-0">
+                            <span className="block text-[10px] font-bold font-mono text-emerald-600 uppercase tracking-wider">{member.role}</span>
+                            <h4 className="font-display font-extrabold text-sm text-gray-900 truncate">{member.name}</h4>
+                            <p className="text-[11px] text-gray-400 font-medium truncate">{member.major} • Angkatan {member.year}</p>
+                          </div>
+                          
+                          <div className="flex items-center space-x-1 shrink-0">
+                            <button
+                              onClick={() => handleSelectEditMember(member)}
+                              className="p-1.5 hover:bg-emerald-100 hover:text-emerald-700 text-gray-500 rounded-lg transition-colors cursor-pointer"
+                              title="Edit Pengurus"
+                            >
+                              <Edit3 className="w-3.5 h-3.5" />
+                            </button>
+
+                            {isConfirming ? (
+                              <div className="flex items-center space-x-1 bg-red-100 border border-red-200 p-1 rounded-lg">
+                                <button
+                                  onClick={() => handleDeleteMemberAction(member.id)}
+                                  className="px-1.5 py-0.5 bg-red-600 text-white rounded text-[9px] font-bold"
+                                >
+                                  Ya?
+                                </button>
+                                <button
+                                  onClick={() => setDeleteConfirmId(null)}
+                                  className="text-gray-500 text-[9px] font-bold hover:text-gray-900 px-1"
+                                >
+                                  X
+                                </button>
+                              </div>
+                            ) : (
+                              <button
+                                onClick={() => setDeleteConfirmId(member.id)}
+                                className="p-1.5 hover:bg-red-100 hover:text-red-600 text-gray-400 rounded-lg transition-colors cursor-pointer"
+                                title="Hapus Pengurus"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* 2. Kementerian & Biro Teknis section */}
+                <div className="bg-white border border-gray-100 rounded-3xl p-6 shadow-xs space-y-4">
+                  <div className="border-b border-gray-100 pb-3 flex justify-between items-center">
+                    <div>
+                      <h3 className="font-display font-extrabold text-lg text-gray-900">
+                        Kementerian & Biro Teknis
+                      </h3>
+                      <p className="text-xs text-gray-500">Kementerian operasional pembantu pengurus inti.</p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    {ministries.map((min) => {
+                      const isConfirming = deleteConfirmId === min.id;
+                      return (
+                        <div key={min.id} className="bg-slate-50 border border-slate-100 rounded-2xl p-5 space-y-3 hover:border-emerald-100 hover:shadow-2xs transition-all text-left">
+                          <div className="flex justify-between items-start gap-4">
+                            <div className="space-y-1">
+                              <h4 className="font-display font-extrabold text-base text-gray-900">{min.name}</h4>
+                              <p className="text-xs text-gray-500 leading-relaxed max-w-xl">{min.description}</p>
+                            </div>
+                            
+                            <div className="flex items-center space-x-1 shrink-0">
+                              <button
+                                onClick={() => handleSelectEditMin(min)}
+                                className="p-1.5 hover:bg-emerald-100 hover:text-emerald-700 text-gray-500 rounded-lg transition-colors cursor-pointer"
+                                title="Edit Kementerian"
+                              >
+                                <Edit3 className="w-3.5 h-3.5" />
+                              </button>
+
+                              {isConfirming ? (
+                                <div className="flex items-center space-x-1 bg-red-100 border border-red-200 p-1 rounded-lg">
+                                  <button
+                                    onClick={() => handleDeleteMinAction(min.id)}
+                                    className="px-1.5 py-0.5 bg-red-600 text-white rounded text-[9px] font-bold"
+                                  >
+                                    Ya?
+                                  </button>
+                                  <button
+                                    onClick={() => setDeleteConfirmId(null)}
+                                    className="text-gray-500 text-[9px] font-bold hover:text-gray-900 px-1"
+                                  >
+                                    X
+                                  </button>
+                                </div>
+                              ) : (
+                                <button
+                                  onClick={() => setDeleteConfirmId(min.id)}
+                                  className="p-1.5 hover:bg-red-100 hover:text-red-600 text-gray-400 rounded-lg transition-colors cursor-pointer"
+                                  title="Hapus Kementerian"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              )}
+                            </div>
+                          </div>
+
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-gray-200/50 text-xs">
+                            <div className="space-y-1">
+                              <span className="block text-[10px] text-gray-400 uppercase font-mono tracking-wider">Pimpinan</span>
+                              <p className="font-medium text-gray-700">Menteri: <span className="font-bold text-gray-900">{min.leader || '-'}</span></p>
+                              <p className="font-medium text-gray-700">Sekjen: <span className="font-bold text-gray-900">{min.sekjen || '-'}</span></p>
+                            </div>
+                            <div className="space-y-1">
+                              <span className="block text-[10px] text-gray-400 uppercase font-mono tracking-wider">Staf Ahli ({min.staff ? min.staff.length : 0})</span>
+                              <p className="font-medium text-gray-600 truncate">
+                                {min.staff && min.staff.length > 0 ? min.staff.join(', ') : 'Belum ada staf.'}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+              </div>
+
+              {/* Right Side: Double Edit Form (Members Form AND Ministries Form) */}
+              <div className="xl:col-span-1 space-y-6">
+                
+                {/* A. Cabinet Member Edit/Add form */}
+                <div className="bg-white border border-gray-100 rounded-3xl p-6 shadow-xs text-left space-y-4">
+                  <div className="border-b border-gray-100 pb-3 flex justify-between items-center">
+                    <h3 className="font-display font-extrabold text-gray-900 text-sm">
+                      {editingMember ? '👤 Edit Data Pengurus Inti' : '👤 Tambah Pengurus Inti'}
+                    </h3>
+                    {editingMember && (
+                      <button
+                        onClick={handleCancelMemberForm}
+                        className="text-xs font-bold text-gray-400 hover:text-gray-900 bg-slate-100 px-2 py-1 rounded"
+                      >
+                        Batal
+                      </button>
+                    )}
+                  </div>
+
+                  {profileSuccessMsg && (
+                    <div className="bg-emerald-50 text-emerald-700 text-xs p-3 rounded-lg flex items-center space-x-2 border border-emerald-100">
+                      <CheckCircle className="w-4 h-4 shrink-0" />
+                      <span>Data profil kabinet berhasil diperbarui!</span>
+                    </div>
+                  )}
+
+                  <form onSubmit={handleSaveMemberForm} className="space-y-4">
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-mono font-bold text-gray-500 uppercase">Nama Lengkap</label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="Contoh: Fahri Ramadhan"
+                        value={memberName}
+                        onChange={(e) => setMemberName(e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-200 rounded-lg text-xs"
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-mono font-bold text-gray-500 uppercase">Jabatan / Peran</label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="Contoh: Ketua BEM / Bendahara"
+                        value={memberRole}
+                        onChange={(e) => setMemberRole(e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-200 rounded-lg text-xs"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-mono font-bold text-gray-500 uppercase">Jurusan</label>
+                        <select
+                          value={memberMajor}
+                          onChange={(e) => setMemberMajor(e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-200 rounded-lg text-xs bg-white text-gray-700"
+                        >
+                          <option value="Teknik Informatika">Informatika</option>
+                          <option value="Sistem Informasi">Sistem Informasi</option>
+                          <option value="Sains Data">Sains Data</option>
+                          <option value="Teknik Komputer">Teknik Komputer</option>
+                          <option value="Hukum">Hukum</option>
+                          <option value="Manajemen">Manajemen</option>
+                          <option value="Akuntansi">Akuntansi</option>
+                        </select>
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-mono font-bold text-gray-500 uppercase">Angkatan</label>
+                        <input
+                          type="text"
+                          required
+                          placeholder="Contoh: 2023"
+                          value={memberYear}
+                          onChange={(e) => setMemberYear(e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-200 rounded-lg text-xs"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-mono font-bold text-gray-500 uppercase">URL Foto Pengurus</label>
+                      <input
+                        type="text"
+                        placeholder="https://images.unsplash.com/photo-..."
+                        value={memberPhoto}
+                        onChange={(e) => setMemberPhoto(e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-200 rounded-lg text-xs"
+                      />
+                    </div>
+
+                    <button
+                      type="submit"
+                      className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 rounded-xl text-xs flex items-center justify-center space-x-1 cursor-pointer transition-colors"
+                    >
+                      <Save className="w-3.5 h-3.5" />
+                      <span>{editingMember ? 'Simpan Perubahan' : 'Tambah Pengurus'}</span>
+                    </button>
+                  </form>
+                </div>
+
+                {/* B. Ministry Edit/Add form */}
+                <div className="bg-white border border-gray-100 rounded-3xl p-6 shadow-xs text-left space-y-4">
+                  <div className="border-b border-gray-100 pb-3 flex justify-between items-center">
+                    <h3 className="font-display font-extrabold text-gray-900 text-sm">
+                      {editingMin ? '🏛️ Edit Data Kementerian' : '🏛️ Tambah Kementerian Baru'}
+                    </h3>
+                    {editingMin && (
+                      <button
+                        onClick={handleCancelMinForm}
+                        className="text-xs font-bold text-gray-400 hover:text-gray-900 bg-slate-100 px-2 py-1 rounded"
+                      >
+                        Batal
+                      </button>
+                    )}
+                  </div>
+
+                  <form onSubmit={handleSaveMinForm} className="space-y-4">
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-mono font-bold text-gray-500 uppercase">Nama Kementerian</label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="Contoh: Kementerian Dalam Negeri"
+                        value={minName}
+                        onChange={(e) => setMinName(e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-200 rounded-lg text-xs"
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-mono font-bold text-gray-500 uppercase">Deskripsi / Fokus</label>
+                      <textarea
+                        rows={3}
+                        required
+                        placeholder="Rangkum fokus kementerian ini..."
+                        value={minDesc}
+                        onChange={(e) => setMinDesc(e.target.value)}
+                        className="w-full p-2.5 border border-gray-200 rounded-lg text-xs"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-mono font-bold text-gray-500 uppercase">Menteri</label>
+                        <input
+                          type="text"
+                          required
+                          placeholder="Nama Menteri"
+                          value={minLeader}
+                          onChange={(e) => setMinLeader(e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-200 rounded-lg text-xs"
+                        />
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-mono font-bold text-gray-500 uppercase">Sekjen</label>
+                        <input
+                          type="text"
+                          required
+                          placeholder="Nama Sekjen"
+                          value={minSekjen}
+                          onChange={(e) => setMinSekjen(e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-200 rounded-lg text-xs"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-mono font-bold text-gray-500 uppercase">Daftar Staf Ahli (Pisahkan dengan Koma)</label>
+                      <input
+                        type="text"
+                        placeholder="Contoh: Budi Santoso, Kiki Mahendra, Alya Yasmin"
+                        value={minStaff}
+                        onChange={(e) => setMinStaff(e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-200 rounded-lg text-xs"
+                      />
+                    </div>
+
+                    <button
+                      type="submit"
+                      className="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-2 rounded-xl text-xs flex items-center justify-center space-x-1 cursor-pointer transition-colors"
+                    >
+                      <Save className="w-3.5 h-3.5" />
+                      <span>{editingMin ? 'Simpan Perubahan' : 'Tambah Kementerian'}</span>
+                    </button>
+                  </form>
+                </div>
+
               </div>
             </motion.div>
           )}

@@ -1,4 +1,4 @@
-import { News, BEMEvent, Program, Document, Aspiration } from './types';
+import { News, BEMEvent, Program, Document, Aspiration, CabinetMember, Ministry } from './types';
 
 export const initialNews: News[] = [
   {
@@ -260,17 +260,9 @@ export const initialAspirations: Aspiration[] = [
   }
 ];
 
-export interface CabinetMember {
-  name: string;
-  role: string;
-  department: string;
-  photo: string;
-  major: string;
-  year: string;
-}
-
-export const cabinetMembers: CabinetMember[] = [
+export const initialCabinetMembers: CabinetMember[] = [
   {
+    id: 'mb-1',
     name: 'Fahri Ramadhan',
     role: 'Ketua Umum',
     department: 'Inti',
@@ -279,6 +271,7 @@ export const cabinetMembers: CabinetMember[] = [
     year: '2023'
   },
   {
+    id: 'mb-2',
     name: 'Siti Aminah',
     role: 'Wakil Ketua Umum',
     department: 'Inti',
@@ -287,6 +280,7 @@ export const cabinetMembers: CabinetMember[] = [
     year: '2023'
   },
   {
+    id: 'mb-3',
     name: 'Andi Wijaya',
     role: 'Sekretaris Jenderal',
     department: 'Inti',
@@ -295,6 +289,7 @@ export const cabinetMembers: CabinetMember[] = [
     year: '2023'
   },
   {
+    id: 'mb-4',
     name: 'Larasati Putri',
     role: 'Bendahara Umum',
     department: 'Inti',
@@ -304,8 +299,9 @@ export const cabinetMembers: CabinetMember[] = [
   }
 ];
 
-export const ministries = [
+export const initialMinistries: Ministry[] = [
   {
+    id: 'min-1',
     name: 'Kementerian Sosial & Masyarakat',
     description: 'Berfokus pada pengabdian masyarakat, advokasi isu-isu sosial, dan pemberdayaan komunitas di sekitar kampus.',
     leader: 'Reza Pahlevi',
@@ -313,6 +309,7 @@ export const ministries = [
     staff: ['Budi Santoso', 'Kiki Mahendra', 'Alya Yasmin']
   },
   {
+    id: 'min-2',
     name: 'Kementerian Akademik & Riset',
     description: 'Memfasilitasi pengembangan kompetensi akademik, olimpiade, dan iklim riset bagi mahasiswa.',
     leader: 'Hendra M.',
@@ -320,6 +317,7 @@ export const ministries = [
     staff: ['Rian Adit', 'Luthfi T.']
   },
   {
+    id: 'min-3',
     name: 'Kementerian Hubungan Luar',
     description: 'Menjalin kerjasama strategis dengan organisasi eksternal, alumni, dan institusi pemerintahan.',
     leader: 'Joko P.',

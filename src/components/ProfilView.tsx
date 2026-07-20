@@ -1,12 +1,22 @@
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
 import { Users, BookOpen, Star, Shield, ArrowRight, UserCheck } from 'lucide-react';
-import { cabinetMembers, ministries } from '../data';
+import { CabinetMember, Ministry } from '../types';
 
-export const ProfilView: React.FC = () => {
+interface ProfilViewProps {
+  cabinetMembers: CabinetMember[];
+  ministries: Ministry[];
+}
+
+export const ProfilView: React.FC<ProfilViewProps> = ({ cabinetMembers, ministries }) => {
   const [selectedMinistry, setSelectedMinistry] = useState<number>(0);
 
   const coreMembers = cabinetMembers.filter(m => m.department === 'Inti');
+  
+  // Safe access of selected ministry
+  const safeSelectedIdx = selectedMinistry < ministries.length ? selectedMinistry : 0;
+  const currentMin = ministries[safeSelectedIdx];
+
 
   return (
     <div className="space-y-16" id="profil-view-container">
@@ -164,45 +174,57 @@ export const ProfilView: React.FC = () => {
 
           {/* Ministry details panel */}
           <div className="lg:col-span-2 bg-white border border-gray-200 rounded-2xl p-6 sm:p-8 space-y-6 text-left shadow-xs">
-            <div className="space-y-2">
-              <span className="inline-block bg-emerald-50 text-emerald-600 font-mono text-[10px] font-bold px-2.5 py-1 rounded-md tracking-wider uppercase">
-                Fokus Kegiatan Kementerian
-              </span>
-              <h3 className="font-display font-extrabold text-xl text-gray-900">
-                {ministries[selectedMinistry].name}
-              </h3>
-              <p className="text-sm text-gray-600 leading-relaxed">
-                {ministries[selectedMinistry].description}
-              </p>
-            </div>
-
-            <hr className="border-gray-100" />
-
-            {/* Ministry Roster */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 text-sm">
-              <div className="space-y-3">
-                <h4 className="font-bold text-gray-900 border-l-3 border-emerald-500 pl-2">Pimpinan</h4>
+            {currentMin ? (
+              <>
                 <div className="space-y-2">
-                  <div>
-                    <span className="block text-xs text-gray-400 uppercase">Menteri</span>
-                    <span className="font-semibold text-gray-800">{ministries[selectedMinistry].leader}</span>
+                  <span className="inline-block bg-emerald-50 text-emerald-600 font-mono text-[10px] font-bold px-2.5 py-1 rounded-md tracking-wider uppercase">
+                    Fokus Kegiatan Kementerian
+                  </span>
+                  <h3 className="font-display font-extrabold text-xl text-gray-900">
+                    {currentMin.name}
+                  </h3>
+                  <p className="text-sm text-gray-600 leading-relaxed">
+                    {currentMin.description}
+                  </p>
+                </div>
+
+                <hr className="border-gray-100" />
+
+                {/* Ministry Roster */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 text-sm">
+                  <div className="space-y-3">
+                    <h4 className="font-bold text-gray-900 border-l-3 border-emerald-500 pl-2">Pimpinan</h4>
+                    <div className="space-y-2">
+                      <div>
+                        <span className="block text-xs text-gray-400 uppercase">Menteri</span>
+                        <span className="font-semibold text-gray-800">{currentMin.leader}</span>
+                      </div>
+                      <div>
+                        <span className="block text-xs text-gray-400 uppercase">Sekretaris Jenderal</span>
+                        <span className="font-semibold text-gray-800">{currentMin.sekjen}</span>
+                      </div>
+                    </div>
                   </div>
-                  <div>
-                    <span className="block text-xs text-gray-400 uppercase">Sekretaris Jenderal</span>
-                    <span className="font-semibold text-gray-800">{ministries[selectedMinistry].sekjen}</span>
+
+                  <div className="space-y-3">
+                    <h4 className="font-bold text-gray-900 border-l-3 border-emerald-500 pl-2">Daftar Staf Ahli</h4>
+                    {currentMin.staff && currentMin.staff.length > 0 ? (
+                      <ul className="space-y-1.5 text-gray-600 font-medium list-disc list-inside">
+                        {currentMin.staff.map((staffName, sidx) => (
+                          <li key={sidx} className="hover:text-emerald-600 transition-colors">{staffName}</li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p className="text-xs text-gray-400">Belum ada staf ahli yang ditugaskan.</p>
+                    )}
                   </div>
                 </div>
+              </>
+            ) : (
+              <div className="py-12 text-center text-gray-400 text-xs">
+                Tidak ada data kementerian. Silakan tambahkan kementerian melalui panel admin.
               </div>
-
-              <div className="space-y-3">
-                <h4 className="font-bold text-gray-900 border-l-3 border-emerald-500 pl-2">Daftar Staf Ahli</h4>
-                <ul className="space-y-1.5 text-gray-600 font-medium list-disc list-inside">
-                  {ministries[selectedMinistry].staff.map((staffName, sidx) => (
-                    <li key={sidx} className="hover:text-emerald-600 transition-colors">{staffName}</li>
-                  ))}
-                </ul>
-              </div>
-            </div>
+            )}
           </div>
         </div>
       </section>

@@ -54,3 +54,23 @@ export interface BEMEvent {
   time: string;
   location: string;
 }
+
+export interface CabinetMember {
+  id: string;
+  name: string;
+  role: string;
+  department: string; // e.g. "Inti"
+  photo: string;
+  major: string;
+  year: string;
+}
+
+export interface Ministry {
+  id: string;
+  name: string;
+  description: string;
+  leader: string;
+  sekjen: string;
+  staff: string[];
+}
+
