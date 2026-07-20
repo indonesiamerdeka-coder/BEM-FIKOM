@@ -78,11 +78,17 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, onTabChange, isAdmin
               className={`flex items-center space-x-1.5 px-4 py-2 rounded-md text-sm font-medium transition-all cursor-pointer ${
                 currentTab === 'admin'
                   ? 'bg-emerald-600 text-white shadow-xs'
-                  : 'bg-gray-100 hover:bg-emerald-600 hover:text-white text-gray-700'
+                  : isAdmin
+                    ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/50 hover:bg-emerald-100'
+                    : 'bg-gray-100 hover:bg-emerald-600 hover:text-white text-gray-700'
               }`}
             >
-              <LayoutDashboard className="w-4 h-4" />
-              <span>Admin Panel</span>
+              {isAdmin ? (
+                <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
+              ) : (
+                <LayoutDashboard className="w-4 h-4" />
+              )}
+              <span>{isAdmin ? 'Admin (Aktif)' : 'Admin Panel'}</span>
             </button>
           </div>
 
@@ -129,11 +135,17 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, onTabChange, isAdmin
               className={`w-full flex items-center space-x-2 block px-3 py-2.5 rounded-md text-base font-medium transition-all ${
                 currentTab === 'admin'
                   ? 'bg-emerald-600 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-emerald-600 hover:text-white'
+                  : isAdmin
+                    ? 'bg-emerald-50 text-emerald-800 font-bold border border-emerald-100'
+                    : 'bg-gray-100 text-gray-700 hover:bg-emerald-600 hover:text-white'
               }`}
             >
-              <LayoutDashboard className="w-5 h-5" />
-              <span>Admin Panel</span>
+              {isAdmin ? (
+                <ShieldCheck className="w-5 h-5 text-emerald-600 shrink-0" />
+              ) : (
+                <LayoutDashboard className="w-5 h-5" />
+              )}
+              <span>{isAdmin ? 'Admin (Sesi Aktif)' : 'Admin Panel'}</span>
             </button>
           </div>
         </div>

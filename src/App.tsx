@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   Megaphone, 
@@ -15,6 +15,7 @@ import { ProgramKerjaView } from './components/ProgramKerjaView';
 import { AspirasiView } from './components/AspirasiView';
 import { DownloadCenterView } from './components/DownloadCenterView';
 import { AdminDashboardView } from './components/AdminDashboardView';
+import { AdminLoginView } from './components/AdminLoginView';
 
 import { 
   initialNews, 
@@ -30,12 +31,24 @@ export default function App() {
   const [currentTab, setCurrentTab] = useState<string>('home');
   const [showBanner, setShowBanner] = useState(true);
 
-  // Core Reactive Data States
-  const [newsList, setNewsList] = useState<News[]>(initialNews);
+  // Core Reactive Data States loaded with lazy initializers from localStorage
+  const [newsList, setNewsList] = useState<News[]>(() => {
+    const saved = localStorage.getItem('bem_news');
+    return saved ? JSON.parse(saved) : initialNews;
+  });
   const [events, setEvents] = useState<BEMEvent[]>(initialEvents);
-  const [programs, setPrograms] = useState<Program[]>(initialPrograms);
-  const [documents, setDocuments] = useState<Document[]>(initialDocuments);
-  const [aspirations, setAspirations] = useState<Aspiration[]>(initialAspirations);
+  const [programs, setPrograms] = useState<Program[]>(() => {
+    const saved = localStorage.getItem('bem_programs');
+    return saved ? JSON.parse(saved) : initialPrograms;
+  });
+  const [documents, setDocuments] = useState<Document[]>(() => {
+    const saved = localStorage.getItem('bem_documents');
+    return saved ? JSON.parse(saved) : initialDocuments;
+  });
+  const [aspirations, setAspirations] = useState<Aspiration[]>(() => {
+    const saved = localStorage.getItem('bem_aspirations');
+    return saved ? JSON.parse(saved) : initialAspirations;
+  });
 
   // New ticket alerts
   const [newTicketId, setNewTicketId] = useState<string | null>(null);
@@ -43,8 +56,32 @@ export default function App() {
   // Global Toast notifier state
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
-  // Is Admin simulator toggle
-  const [isAdmin, setIsAdmin] = useState(false);
+  // Is Admin state synced with localStorage
+  const [isAdmin, setIsAdmin] = useState<boolean>(() => {
+    const saved = localStorage.getItem('bem_is_admin');
+    return saved === 'true';
+  });
+
+  // Synchronizers to localStorage on state changes
+  useEffect(() => {
+    localStorage.setItem('bem_news', JSON.stringify(newsList));
+  }, [newsList]);
+
+  useEffect(() => {
+    localStorage.setItem('bem_programs', JSON.stringify(programs));
+  }, [programs]);
+
+  useEffect(() => {
+    localStorage.setItem('bem_documents', JSON.stringify(documents));
+  }, [documents]);
+
+  useEffect(() => {
+    localStorage.setItem('bem_aspirations', JSON.stringify(aspirations));
+  }, [aspirations]);
+
+  useEffect(() => {
+    localStorage.setItem('bem_is_admin', String(isAdmin));
+  }, [isAdmin]);
 
   // Handlers
   const handleTabChange = (tabId: string) => {
@@ -90,6 +127,7 @@ export default function App() {
     triggerToast(`✨ Tiket ${id} berhasil dikirimkan!`);
   };
 
+  // CRUD for Aspirations
   const handleUpdateAspiration = (updatedAsp: Aspiration) => {
     setAspirations(prev => 
       prev.map(a => a.id === updatedAsp.id ? updatedAsp : a)
@@ -97,6 +135,12 @@ export default function App() {
     triggerToast(`💾 Berhasil mengupdate status tiket ${updatedAsp.id}`);
   };
 
+  const handleDeleteAspiration = (id: string) => {
+    setAspirations(prev => prev.filter(a => a.id !== id));
+    triggerToast(`🗑️ Aspirasi dengan tiket ${id} berhasil dihapus.`);
+  };
+
+  // CRUD for Programs
   const handleAddProgram = (progData: Omit<Program, 'id' | 'dateUpdated'>) => {
     const id = `prog-${Math.floor(Math.random() * 10000)}`;
     const newProg: Program = {
@@ -109,6 +153,19 @@ export default function App() {
     triggerToast(`💼 Program "${progData.name}" berhasil didaftarkan.`);
   };
 
+  const handleUpdateProgram = (updatedProg: Program) => {
+    setPrograms(prev => 
+      prev.map(p => p.id === updatedProg.id ? { ...updatedProg, dateUpdated: 'Baru saja diupdate' } : p)
+    );
+    triggerToast(`💾 Program "${updatedProg.name}" berhasil diperbarui.`);
+  };
+
+  const handleDeleteProgram = (id: string) => {
+    setPrograms(prev => prev.filter(p => p.id !== id));
+    triggerToast(`🗑️ Program kerja berhasil dihapus.`);
+  };
+
+  // CRUD for News
   const handleAddNews = (newsData: Omit<News, 'id' | 'views'>) => {
     const id = `news-${Math.floor(Math.random() * 10000)}`;
     const newNews: News = {
@@ -119,6 +176,43 @@ export default function App() {
 
     setNewsList(prev => [newNews, ...prev]);
     triggerToast(`📢 Kabar "${newsData.title}" berhasil diterbitkan.`);
+  };
+
+  const handleUpdateNews = (updatedNews: News) => {
+    setNewsList(prev => 
+      prev.map(n => n.id === updatedNews.id ? updatedNews : n)
+    );
+    triggerToast(`💾 Kabar "${updatedNews.title}" berhasil diperbarui.`);
+  };
+
+  const handleDeleteNews = (id: string) => {
+    setNewsList(prev => prev.filter(n => n.id !== id));
+    triggerToast(`🗑️ Berita berhasil dihapus.`);
+  };
+
+  // CRUD for Documents
+  const handleAddDocument = (docData: Omit<Document, 'id' | 'downloadsCount'>) => {
+    const id = `doc-${Math.floor(Math.random() * 10000)}`;
+    const newDoc: Document = {
+      id,
+      ...docData,
+      downloadsCount: 0
+    };
+
+    setDocuments(prev => [newDoc, ...prev]);
+    triggerToast(`📄 Dokumen "${docData.name}" berhasil ditambahkan.`);
+  };
+
+  const handleUpdateDocument = (updatedDoc: Document) => {
+    setDocuments(prev => 
+      prev.map(d => d.id === updatedDoc.id ? updatedDoc : d)
+    );
+    triggerToast(`💾 Dokumen "${updatedDoc.name}" berhasil diperbarui.`);
+  };
+
+  const handleDeleteDocument = (id: string) => {
+    setDocuments(prev => prev.filter(d => d.id !== id));
+    triggerToast(`🗑️ Dokumen berhasil dihapus.`);
   };
 
   // Helper count totals
@@ -207,14 +301,34 @@ export default function App() {
             )}
 
             {currentTab === 'admin' && (
-              <AdminDashboardView 
-                aspirations={aspirations}
-                programs={programs}
-                newsList={newsList}
-                onUpdateAspiration={handleUpdateAspiration}
-                onAddProgram={handleAddProgram}
-                onAddNews={handleAddNews}
-              />
+              isAdmin ? (
+                <AdminDashboardView 
+                  aspirations={aspirations}
+                  programs={programs}
+                  newsList={newsList}
+                  documents={documents}
+                  onUpdateAspiration={handleUpdateAspiration}
+                  onDeleteAspiration={handleDeleteAspiration}
+                  onAddProgram={handleAddProgram}
+                  onUpdateProgram={handleUpdateProgram}
+                  onDeleteProgram={handleDeleteProgram}
+                  onAddNews={handleAddNews}
+                  onUpdateNews={handleUpdateNews}
+                  onDeleteNews={handleDeleteNews}
+                  onAddDocument={handleAddDocument}
+                  onUpdateDocument={handleUpdateDocument}
+                  onDeleteDocument={handleDeleteDocument}
+                  onLogout={() => {
+                    setIsAdmin(false);
+                    triggerToast("🔒 Berhasil log out dari panel admin.");
+                  }}
+                />
+              ) : (
+                <AdminLoginView 
+                  onLoginSuccess={() => setIsAdmin(true)} 
+                  triggerToast={triggerToast} 
+                />
+              )
             )}
           </motion.div>
         </AnimatePresence>
